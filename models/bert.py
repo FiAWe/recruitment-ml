@@ -133,6 +133,6 @@ if __name__ == '__main__':
     model_vars = {}
 
     # Parse command line arguments
-    args, MODEL_NAME = parse_args(MODEL_NAME)
+    MODEL_NAME = parse_args(MODEL_NAME, model_vars)
 
     run_model_pipeline(MODEL_NAME, fetch_data, declare_model, train_model, predict, model_vars, args)

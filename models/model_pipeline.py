@@ -47,7 +47,7 @@ class Timer:
         """
         return self.time_taken[key]
 
-def parse_args(MODEL_NAME):
+def parse_args(MODEL_NAME, model_vars):
     parser = argparse.ArgumentParser(description='Naive Bayes model')
     parser.add_argument('--generate_substrings', type=str, default='none', const='random', nargs='?', help='Generate random substrings')
     parser.add_argument('--random_substrings', type=int, default=10, help='Number of random substrings to generate')
@@ -57,9 +57,13 @@ def parse_args(MODEL_NAME):
     # if generating random substrings
     if args.generate_substrings == 'random':
         MODEL_NAME += f'__random_{args.random_substrings}'
-    return args, MODEL_NAME
 
-def fetch_data(model_vars:dict, args:argparse.Namespace)-> None:
+    model_vars['generate_substrings'] = args.generate_substrings
+    model_vars['random_substrings'] = args.random_substrings
+
+    return MODEL_NAME
+
+def fetch_data(model_vars:dict)-> None:
     """
     Fetches the data for training and testing the model and stores it in the model_vars dictionary.
 
@@ -83,8 +87,8 @@ def fetch_data(model_vars:dict, args:argparse.Namespace)-> None:
     """
 
     X_train, X_test, y_train, y_test, le = get_data(
-        generate_substrings=args.generate_substrings,
-        random_substrings=args.random_substrings
+        generate_substrings=model_vars['generate_substrings'],
+        random_substrings=model_vars['random_substrings']
     )
 
     # Save variables to model_vars
@@ -101,7 +105,6 @@ def run_model_pipeline(
         train_model:callable,
         predict:callable,
         model_vars:dict,
-        args:argparse.Namespace
     ):
     """
     Runs the model pipeline for training and evaluating a machine learning model.
@@ -126,7 +129,7 @@ def run_model_pipeline(
 
     # Get the data
     timer.start('get_data')
-    fetch_data(model_vars, args)
+    fetch_data(model_vars)
     timer.end('get_data')
 
     print(f'Data preparation time: {timer["get_data"]:0.4f}')
