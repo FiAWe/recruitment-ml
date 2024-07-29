@@ -3,13 +3,21 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def post_process(X_test, y_test, y_pred_nb, y_pred_nb_proba, le, model_name):
+def post_process(model_vars, model_name, verbose=True):
     
+    # Extract the variables
+    X_test = model_vars['X_test']
+    y_test = model_vars['y_test']
+    y_pred_nb = model_vars['y_pred_nb']
+    y_pred_nb_proba = model_vars['y_pred_nb_proba']
+    le = model_vars['le']
+
     # Print the classification report
-    print(classification_report(y_test, y_pred_nb, digits=4))
-    print("Confusion matrix:")
-    print(confusion_matrix(y_test, y_pred_nb))
-    print("AUC-ROC:", roc_auc_score(y_test, y_pred_nb_proba))
+    if verbose:
+        print(classification_report(y_test, y_pred_nb, digits=4))
+        print("Confusion matrix:")
+        print(confusion_matrix(y_test, y_pred_nb))
+        print("AUC-ROC:", roc_auc_score(y_test, y_pred_nb_proba))
 
     # Save the predictions
     y_pred_nb = le.inverse_transform(y_pred_nb)
@@ -52,7 +60,13 @@ def post_process(X_test, y_test, y_pred_nb, y_pred_nb_proba, le, model_name):
     plt.savefig(f'results/{model_name}_precision_recall_curve.png', dpi=300)
     plt.clf()
 
-def save_meta_data(timings:dict, data_size:dict, model_name:str):
+def save_meta_data(timings:dict, model_vars:dict, model_name:str):
+
+    data_size = {
+        'train': len(model_vars['X_train']),
+        'test': len(model_vars['X_test'])
+    }
+
     with open(f'results/{model_name}_metadata.txt', 'w') as f:
         f.write('Timings\n')
         f.write('-------\n')
