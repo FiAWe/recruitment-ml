@@ -9,8 +9,6 @@ from typing import Dict, Any
 from model_pipeline import run_model_pipeline, fetch_data, parse_args
 
 
-
-
 MODEL_NAME = 'BERT'
 
 def declare_model(model_vars: Dict[str, Any]) -> None:
