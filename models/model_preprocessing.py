@@ -2,10 +2,10 @@ import pandas as pd
 import json
 import re
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 
+from typing import Tuple
 
 
 # Preprocessing
@@ -118,7 +118,11 @@ def convert_substrings_to_rows(df:pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def get_data(random_state:int=42, generate_substrings:str='none', random_substrings:int=10):
+def get_data(
+    random_state:int=42,
+    generate_substrings:str='none',
+    random_substrings:int=10
+    ):
     """Load and preprocess the data.
 
     Args:
@@ -165,6 +169,46 @@ def get_data(random_state:int=42, generate_substrings:str='none', random_substri
         )
 
     return X_train, X_test, y_train, y_test, le
+
+
+def get_data_kfolds(
+        random_state:int=42,
+        n_splits:int=5
+    )-> Tuple[StratifiedKFold, pd.Series, pd.Series, LabelEncoder]:
+    """
+    Load the dataset, preprocess the text, encode labels, and create a StratifiedKFold object.
+
+    Parameters:
+        random_state (int): Random seed for reproducibility. Default is 42.
+        n_splits (int): Number of folds in the StratifiedKFold object. Default is 5.
+
+    Returns:
+        StratifiedKFold: StratifiedKFold object for cross-validation
+        pd.Series: Text data (X)
+        pd.Series: Labels (y)
+        LabelEncoder: Label encoder
+    """
+
+    # Load the dataset
+    with open('../data/gutenberg-paragraphs.json') as f:
+        data = json.load(f)
+
+    # Convert to DataFrame
+    df = pd.DataFrame(data)
+
+    df['text'] = df['text'].apply(preprocess_text)
+
+    # Encode labels
+    le = LabelEncoder()
+    df['label'] = le.fit_transform(df['austen'])
+
+    X = df['text']
+    y = df['label']
+
+    # Create StratifiedKFold object
+    kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+
+    return kf, X, y, le
 
 def process_substrings_postsplit(generate_substrings:str, X_train:pd.Series, y_train:pd.Series, random_state:int, random_substrings:int):
 
