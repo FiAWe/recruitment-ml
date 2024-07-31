@@ -1,81 +1,76 @@
-import time
-import argparse
-
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from model_preprocessing import get_data
-from prediction_processing import post_process, save_meta_data
+from typing import Dict, Any
+from pandas import Series
+
+from model_pipeline import run_model_pipeline, fetch_data, parse_args
 
 MODEL_NAME = 'naive_bayes'
 
-timings = {}
+def declare_model(model_vars: Dict[str, Any]) -> None:
+    """
+    Declare and configure the model pipeline.
+    We will use the Multinomial Naive Bayes model with TF-IDF vectorizer.
 
-timings['start'] = time.perf_counter()
-timings['model_declaration:start'] = time.perf_counter()
-# Pipeline for Naive Bayes with TF-IDF
+    Args:
+        model_vars (Dict[str, Any]): A dictionary containing the required variables for the model.
 
-# other vectorizers:
-# CountVectorizer
-# HashingVectorizer
-# TfidfVectorizer
-# TfidfVectorizer with ngram_range
-# Word2Vec
+    Returns:
+        None
+    """
+    pipeline_nb = Pipeline([
+        ('tfidf', TfidfVectorizer()),
+        ('nb', MultinomialNB())
+    ])
+    model_vars['pipeline'] = pipeline_nb
 
-pipeline_nb = Pipeline([
-    ('tfidf', TfidfVectorizer()),
-    ('nb', MultinomialNB())
-])
-timings['model_declaration:end'] = time.perf_counter()
+
+def train_model(model_vars: Dict[str, Any]) -> None:
+    """
+    Train the model.
+
+    Args:
+        model_vars (Dict[str, Any]): A dictionary containing the required variables for the model.
+
+    Returns:
+        None
+    """
+    pipeline_nb: Pipeline = model_vars['pipeline']
+    X_train: Series = model_vars['X_train']
+    y_train: Series = model_vars['y_train']
+
+    pipeline_nb.fit(X_train, y_train)
+
+
+def predict(model_vars: Dict[str, Any]) -> None:
+    """
+    Perform predictions using the trained model.
+
+    Args:
+        model_vars (Dict[str, Any]): A dictionary containing the required variables for the model.
+
+    Returns:
+        None
+    """
+    pipeline_nb: Pipeline = model_vars['pipeline']
+    X_test: Series = model_vars['X_test']
+    
+    y_pred_nb = pipeline_nb.predict(X_test)
+    y_pred_nb_proba = pipeline_nb.predict_proba(X_test)[:, 1]
+
+    # Save variables to model_vars
+    model_vars['y_pred_nb'] = y_pred_nb
+    model_vars['y_pred_nb_proba'] = y_pred_nb_proba
 
 
 if __name__ == '__main__':
 
+    model_vars = {}
+
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Naive Bayes model')
-    parser.add_argument('--generate_substrings', type=str, default='none', const='random', nargs='?', help='Generate random substrings')
-    parser.add_argument('--random_substrings', type=int, default=10, help='Number of random substrings to generate')
-    args = parser.parse_args()
+    MODEL_NAME = parse_args(MODEL_NAME, model_vars)
 
-    # Append model name with 'random' and number of random substrings 
-    # if generating random substrings
-    if args.generate_substrings == 'random':
-        MODEL_NAME += f'__random_{args.random_substrings}'
+    run_model_pipeline(MODEL_NAME, fetch_data, declare_model, train_model, predict, model_vars)
 
-    print(f'Model name: {MODEL_NAME}')
-
-    # Get the data
-    timings['get_data:start'] = time.perf_counter()
-    X_train, X_test, y_train, y_test, le = get_data(
-        generate_substrings=args.generate_substrings,
-        random_substrings=args.random_substrings
-        )
-    timings['get_data:end'] = time.perf_counter()
-
-    print(f'Data preparation time: {timings["get_data:end"] - timings["get_data:start"]:0.4f}')
-
-    # Fit the model
-    timings['fit:start'] = time.perf_counter()
-    pipeline_nb.fit(X_train, y_train)
-    timings['fit:end'] = time.perf_counter()
-
-    print(f'Training time: {timings["fit:end"] - timings["fit:start"]:0.4f}')
-
-    # Evaluate the model
-    timings['predict:start'] = time.perf_counter()
-    y_pred_nb = pipeline_nb.predict(X_test)
-    timings['predict:end'] = time.perf_counter()
-    print(f'Prediction time: {timings["predict:end"] - timings["predict:start"]:0.4f}')
-    y_pred_nb_proba = pipeline_nb.predict_proba(X_test)[:, 1]
-
-    timings['end'] = time.perf_counter()
-
-    post_process(X_test, y_test, y_pred_nb, y_pred_nb_proba, le, model_name=MODEL_NAME)
-
-    data_size = {
-        'train': len(X_train),
-        'test': len(X_test)
-    }
-
-    save_meta_data(timings, data_size, model_name=MODEL_NAME)
