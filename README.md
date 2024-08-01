@@ -28,10 +28,11 @@ small size of the dataset, and limited model development time, this is a very go
 Clone the repository and install the required packages:
 
 ( There are a lot of packages as I have tested several models.
-A subset could be installed for testing only some models)
+For a minimal install, use `min_requirements.txt` instead of `requirements.txt` 
+This will allow you to run the Naive Bayes model and ipython notebooks. )
 
 ```bash
-git clone 
+git clone git@github.com:FiAWe/recruitment-ml.git
 cd recruitment-ml
 
 python3 -m venv .venv
@@ -202,13 +203,13 @@ The most incorrect one looks to be a not from the publisher or editor of a book 
 
 #### False Positives
 These are the 5 paragraphs that the model was most confident were written by Jane Austen, but were actually not written by her.
-|      | text                                                                                                                                                                                                                                                                                        |   prediction_proba |   correct |   label |
-|------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|-----------|---------|
-|  149 | 6 what will be will be well for what is is well to take interest is well and not to take interest shall be well                                                                                                                                                                             |           0.689019 |         5 |       0 |
-| 1220 | it sounded an excellent plan no doubt and very neatly and simply arranged the only difficulty was that she had not the smallest idea how to set about it and while she was peering about anxiously among the trees a little sharp bark just over her head made her look up in a great hurry |           0.720465 |         7 |       0 |
-|  480 | by jove i cried and that's true enough my own mother's family had a banshee and now i come to think of it it has comforted me in many a cold hour                                                                                                                                           |           0.656342 |         8 |       0 |
-|  231 | alice was very glad to find her in such a pleasant temper and thought to herself that perhaps it was only the pepper that had made her so savage when they met in the kitchen                                                                                                               |           0.60397  |         8 |       0 |
-| 1018 | i gave her one they gave him two you gave us three or more they all returned from him to you though they were mine before                                                                                                                                                                   |           0.615139 |         9 |       0 |
+|      | text                                                                                                                                                                                                                                                                                        | prediction_proba | correct | label |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------- | ----- |
+| 149  | 6 what will be will be well for what is is well to take interest is well and not to take interest shall be well                                                                                                                                                                             | 0.689019         | 5       | 0     |
+| 1220 | it sounded an excellent plan no doubt and very neatly and simply arranged the only difficulty was that she had not the smallest idea how to set about it and while she was peering about anxiously among the trees a little sharp bark just over her head made her look up in a great hurry | 0.720465         | 7       | 0     |
+| 480  | by jove i cried and that's true enough my own mother's family had a banshee and now i come to think of it it has comforted me in many a cold hour                                                                                                                                           | 0.656342         | 8       | 0     |
+| 231  | alice was very glad to find her in such a pleasant temper and thought to herself that perhaps it was only the pepper that had made her so savage when they met in the kitchen                                                                                                               | 0.60397          | 8       | 0     |
+| 1018 | i gave her one they gave him two you gave us three or more they all returned from him to you though they were mine before                                                                                                                                                                   | 0.615139         | 9       | 0     |
 
 
 
