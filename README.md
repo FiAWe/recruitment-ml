@@ -20,6 +20,7 @@
       - [False Positives](#false-positives)
   - [What I am pleased with](#what-i-am-pleased-with)
   - [What I would like to improve](#what-i-would-like-to-improve)
+  - [Deployment to Production](#deployment-to-production)
 
 ## Conclusion
 
@@ -259,3 +260,13 @@ A further area to explore is how the text pre-processing affects the model score
 An interseting area to explore would be to assess each word of pairing of words had the greatest effect on a models prediction. Expanding it to look at user input as it is being typed, to give feedback on the likelihood of/similarity to Jane Austen's writing style.
 
 Finally, I would like to explore more models. I have only tested a few models, but there are many more that could be tested. For example, I would like to test the state-of-the-art transformer models like GPT-4 and Gemini. These models cannot be run locally, and instead either need to be fine-tuned withing their own ecosystem or used via one-shot/few-shot learning. The power of these models is incredible, and with their general knowledge of language, they could likely pick up on the subtleties of Jane Austen's writing style.
+
+## Deployment to Production
+
+This code is not set up for productionised deployment, but the steps are relatively simple.
+With the final model chosen, the model can be saved and loaded in a production environment which is listening for
+user requests for classification.
+
+A single preduction can be made by loading the model and calling the `predict` method with the input text.
+
+Monitoring should be set up to ensure the model is performing as expected, and retraining should be scheduled to keep the model up to date with new data - if available.
