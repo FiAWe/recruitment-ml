@@ -11,6 +11,7 @@
     - [Accuracy](#accuracy)
     - [Precision](#precision)
     - [Recall](#recall)
+    - [ROC AUC](#roc-auc)
       - [Model Performance Metrics](#model-performance-metrics)
       - [Model Training Time](#model-training-time)
     - [K-Fold Cross Validation](#k-fold-cross-validation)
@@ -24,14 +25,14 @@
 
 As a high-level conclusion, I can say that I was successful in my goal of creating a simple, yet effective, model for identifying which paragraphs have been written by Jane Austen.
 
-The best model (BERT) achieves an accuracy of 0.9893. Considering the relatively
+The best model (BERT based) achieves an accuracy of 0.9893. Considering the relatively
 small size of the dataset, and limited model development time, this is a very good result.
 
 
 ## Creating environment and running the code
-Clone the repository and install the required packages:
+Simply clone the repository and install the required packages:
 
-( There are a lot of packages as I have tested several models.
+( There are a lot of packages as I have tested several models and some models require modules with many dependencies, such as TensorFlow.
 For a minimal install, use `min_requirements.txt` instead of `requirements.txt` 
 This will allow you to run the Naive Bayes model and ipython notebooks. )
 
@@ -77,7 +78,8 @@ To run with random substrings, add the `--generate_substrings` and `--random_sub
 python naive_bayes.py --generate_substrings --random_substrings 5
 ```
 
-`naive_bayes.py` also has the option to run k-fold cross-validation with the `--kfolds` flag:
+`naive_bayes.py` also has the option to run k-fold cross-validation with the `--kfolds` flag
+( Other models do not have this option, and will ignore the flag if it is passed )
 
 ```bash
 python naive_bayes.py --kfold
@@ -91,13 +93,15 @@ bash all_model_calls.sh
 
 
 ## Workflow overview
+My initial thoughts and plan can be found in the `plan.md` file. This outlines the problem and the approaches I considered.
+
 ### 1. Data exploration
    
 I started by doing some EDA on the dataset. This work can be seen in the notebook `EDA/initial_EDA.ipynb`.
 
 I looked at the formatting of the data, the distribution of the labels, and the length distribution of the paragraphs. I also looked at words more or less common in Jane Austen's paragraphs.
 
-This analysis helped me to understand the data and make some decisions about the preprocessing steps. It also seemed like there were strong trends in the words and sentence structure used by Jane Austen.
+This analysis helped me to understand the data and make some decisions about the preprocessing steps. It also seemed like there were strong trends in the words and sentence structure used by Jane Austen, so a simple model might be effective.
 
 ### 2. Preprocessing  
 
@@ -110,11 +114,11 @@ The preprocessing steps include:
 
 This script also contains a method for data enrichment by giving an option to create random sub-strings of the paragraphs in the training set.
 
-All random splitting is seeded so that the analysis is reproducible.
+All random splitting is seeded so that the analysis is reproducible and comparable across models.
 
 ### 3. Model development
   
-I developed several models to predict the author of the paragraphs. The models ( in order of development) are:
+I developed several models, The models ( in order of development ) are:
 - Naive Bayes
 - Naive Bayes with n-grams
 - Naive Bayes with Word2Vec
@@ -129,7 +133,7 @@ I used:
 
 ### 4. Model evaluation
 
-I evaluated the models using accuracy, precision, recall, and F1-score. The ROC and PR curves were also plotted and their AUC calculateds.
+I evaluated the models using accuracy, precision, recall, and ROC AUC. The ROC and PR curves were also plotted and their AUC calculateds.
 
 Full analysis of all the models and the effects of random sub-string enrichment can be found in the `model_analysis.ipynb` notebook. With a summary here:
 
@@ -165,15 +169,26 @@ First, looking at the primary metrics, with each model on a row and the number o
 | naive_bayes_Word2Vec | 0.9150     | 0.9390     | 0.9389     | 0.9327     |
 | naive_bayes_ngram    | 0.9454     | 0.9741     | 0.9772     | 0.9808     |
 
+### ROC AUC
+| Model                | 0          | 5          | 10         | 50         |
+|----------------------|------------|------------|------------|------------|
+| BERT                 | **0.9984** | **0.9996** | nan        | nan        |
+| LSTM                 | 0.9933     | 0.9943     | 0.9967     | 0.9963     |
+| SVM                  | 0.9963     | 0.9974     | 0.9978     | nan        |
+| naive_bayes          | 0.9982     | 0.9983     | **0.9984** | 0.9981     |
+| naive_bayes_Word2Vec | 0.9660     | 0.9789     | 0.9804     | 0.9803     |
+| naive_bayes_ngram    | 0.9979     | 0.9983     | 0.9983     | **0.9983** |
+
 #### Model Performance Metrics
 ![ModelMetrics](analysis/model_metrics.png)
 ( Model naming convention is {model_name}__{sub_string_count} )
 
-As can be seen, the BERT model is the best performing model in terms of accuracy, precision, and recall.
+As can be seen, the BERT model is the best performing model in terms of accuracy, precision, recall and ROC AUC.
+All models performed well, with the worst performing model being the naive_bayes_Word2Vec model.
 
-Naive Bayes performed very well, considering the ease of implementation and the low computational cost. As this was the first model tested, it set a high benchmark for the other models - where improvment was focussed on the edge cases.
+Naive Bayes performed very well, considering the ease of implementation and the low computational cost. As this was the first model tested, it set a high benchmark for the other models - where improvment was focussed on the edge cases. The variations on the text vectorisation did not have a significant impact on the performance of the model.
 
-Model training time vared significantly between models. Naive Bayes was the fastest to train, with BERT and the SVM being the slowest. These 2 also got substantially slower with the addition of random sub-strings - to the point that it was not feasible to test with 50 sub-strings.
+Model training time varied significantly between models. Naive Bayes was the fastest to train, with BERT and the SVM being the slowest. These 2 also got substantially slower with the addition of random sub-strings - to the point that it was not feasible to test with large amounts of sub-strings.
 
 The sub-strings were effective in improving the performance of the models in general. However the benefit compared to 
 computation time was relatively low, and further tuning of the models would possibly have resulted in similar gains. That said, one of the challenges to very high performance is the limited scale of the dataset, so data augmentation is a useful tool.
@@ -224,10 +239,10 @@ These are the 5 paragraphs that the model was most confident were written by Jan
 
 
 ## What I am pleased with
-I enjoyed working on this project and am pleased with the results. The initial
-simple models performed surprisingly well, but there was still improvement to be made using more complex models.
+I enjoyed working on this project, the effectiveness of even simple models always astounds me. I have tested a variety of models 
+and am pleased with the results. The initial simple models performed surprisingly well, but there was still improvement to be made using more complex models.
 
-I am pleased with the performance of the BERT model. It is a very powerful model and it was interesting to see how it performed on this task. It is pretrained, so relies on a lot more context than the other models. This is likely part of the reason it performed so well.
+I am pleased with the performance of the BERT model. Being a very powerful model, it was interesting to see how it performed on this task. It is pretrained, so relies on a lot more context than the other models can get from just the training data. This is likely part of the reason it performed so well.
 
 I have started to refactor the code to make it more scalable and easier to maintain. Although just a demonstration, I always aim to make the code as clean and readable as possible. Allowing for easy testing of different models and extension of functionality.
 
@@ -235,10 +250,12 @@ I have started to refactor the code to make it more scalable and easier to maint
 This was a very time constrained project, so there are many things I would like to improve.
 One thing I only touched on at the end was repetition and k-fold cross-validation. This would give a better idea of the model's performance and allow for more robust hyperparameter tuning.
 
-I have implemented a function for k-fold cross-validation, and run it for the Naive Bayes model. I would also like to implement repetition, which is a simple addition due to the set up of the splitters using a seed.
+I have implemented a function for k-fold cross-validation, and run it for the Naive Bayes model. I would also like to implement repetition, which is a simple addition due to the set up of the data splitting being seeded.
 
 A major step for improvement would be hyperparameter tuning. I have only done a small amount for these models, without a full grid search. This would likely improve the performance of the models. In particular the deep models have a lot of further potential which could be explored with hyperparameter tuning.
 
 A further area to explore is how the text pre-processing affects the model score. I applied basic text-preprocessing to standardise the inputs. But punctuation, capitalisation, and other features could be used to improve the model.
 
-Finally, I would like to explore more models. I have only tested a few models, but there are many more that could be tested. For example, I would like to test the state-of-the-art transformer models like GPT-3 and Gemini. These models cannot be run locally, and instead either need to be fine-tuned withing their own ecosystem or used via one-shot/few-shot learning.
+An interseting area to explore would be to assess each word of pairing of words had the greatest effect on a models prediction. Expanding it to look at user input as it is being typed, to give feedback on the likelihood of/similarity to Jane Austen's writing style.
+
+Finally, I would like to explore more models. I have only tested a few models, but there are many more that could be tested. For example, I would like to test the state-of-the-art transformer models like GPT-4 and Gemini. These models cannot be run locally, and instead either need to be fine-tuned withing their own ecosystem or used via one-shot/few-shot learning. The power of these models is incredible, and with their general knowledge of language, they could likely pick up on the subtleties of Jane Austen's writing style.
