@@ -1,0 +1,17 @@
+Timings
+-------
+main:start: 2552.759660465
+get_data:start: 2552.759661346
+get_data:end: 2555.33280687
+model_declaration:start: 2555.332853678
+model_declaration:end: 2602.566498199
+fit:start: 2602.56650452
+fit:end: 12073.665017034
+predict:start: 12073.66505184
+predict:end: 12115.883771495
+main:end: 12116.681398406
+
+Data Size
+---------
+train: 56873
+test: 2522
