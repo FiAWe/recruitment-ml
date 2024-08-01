@@ -4,6 +4,10 @@
   - [Conclusion](#conclusion)
   - [Creating environment and running the code](#creating-environment-and-running-the-code)
   - [Workflow overview](#workflow-overview)
+    - [1. Data exploration](#1-data-exploration)
+    - [2. Preprocessing](#2-preprocessing)
+    - [3. Model development](#3-model-development)
+    - [4. Model evaluation](#4-model-evaluation)
     - [Accuracy](#accuracy)
     - [Precision](#precision)
     - [Recall](#recall)
@@ -18,7 +22,7 @@
 
 ## Conclusion
 
-As a high-level conclusion, we can say that we were successful in our goal of creating a simple, yet effective, model for identifying which paragraphs have been written by Jane Austen.
+As a high-level conclusion, I can say that I was successful in my goal of creating a simple, yet effective, model for identifying which paragraphs have been written by Jane Austen.
 
 The best model (BERT) achieves an accuracy of 0.9893. Considering the relatively
 small size of the dataset, and limited model development time, this is a very good result.
@@ -87,7 +91,7 @@ bash all_model_calls.sh
 
 
 ## Workflow overview
-1. Data exploration
+### 1. Data exploration
    
 I started by doing some EDA on the dataset. This work can be seen in the notebook `EDA/initial_EDA.ipynb`.
 
@@ -95,7 +99,8 @@ I looked at the formatting of the data, the distribution of the labels, and the 
 
 This analysis helped me to understand the data and make some decisions about the preprocessing steps. It also seemed like there were strong trends in the words and sentence structure used by Jane Austen.
 
-2. Preprocessing
+### 2. Preprocessing  
+
 I wrote a helper script to load and preprocess the data. This script is `model_preprocessing.py`. It loads the data, preprocesses it, and splits it into training and testing sets. ( Or gives a k-fold split generator for cross-validation)
 
 The preprocessing steps include:
@@ -107,7 +112,8 @@ This script also contains a method for data enrichment by giving an option to cr
 
 All random splitting is seeded so that the analysis is reproducible.
 
-3. Model development
+### 3. Model development
+  
 I developed several models to predict the author of the paragraphs. The models ( in order of development) are:
 - Naive Bayes
 - Naive Bayes with n-grams
@@ -121,7 +127,8 @@ I used:
 - Tensorflow.Keras for the LSTM model.
 - Hugging Face Transformers library for the BERT model.
 
-4. Model evaluation
+### 4. Model evaluation
+
 I evaluated the models using accuracy, precision, recall, and F1-score. The ROC and PR curves were also plotted and their AUC calculateds.
 
 Full analysis of all the models and the effects of random sub-string enrichment can be found in the `model_analysis.ipynb` notebook. With a summary here:
@@ -167,6 +174,9 @@ As can be seen, the BERT model is the best performing model in terms of accuracy
 Naive Bayes performed very well, considering the ease of implementation and the low computational cost. As this was the first model tested, it set a high benchmark for the other models - where improvment was focussed on the edge cases.
 
 Model training time vared significantly between models. Naive Bayes was the fastest to train, with BERT and the SVM being the slowest. These 2 also got substantially slower with the addition of random sub-strings - to the point that it was not feasible to test with 50 sub-strings.
+
+The sub-strings were effective in improving the performance of the models in general. However the benefit compared to 
+computation time was relatively low, and further tuning of the models would possibly have resulted in similar gains. That said, one of the challenges to very high performance is the limited scale of the dataset, so data augmentation is a useful tool.
 
 #### Model Training Time
 ![ModelTrainingTime](analysis/model_time.png)
@@ -219,7 +229,7 @@ simple models performed surprisingly well, but there was still improvement to be
 
 I am pleased with the performance of the BERT model. It is a very powerful model and it was interesting to see how it performed on this task. It is pretrained, so relies on a lot more context than the other models. This is likely part of the reason it performed so well.
 
-I have started to refactor the code to make it more scalable and easier to maintain. Although just a demonstration, I have tried to make the code as clean and readable as possible. And allow for easy testing of different models and extension of functionality.
+I have started to refactor the code to make it more scalable and easier to maintain. Although just a demonstration, I always aim to make the code as clean and readable as possible. Allowing for easy testing of different models and extension of functionality.
 
 ## What I would like to improve
 This was a very time constrained project, so there are many things I would like to improve.
