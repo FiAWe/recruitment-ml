@@ -2,7 +2,7 @@ import time
 
 import argparse
 
-from model_preprocessing import get_data
+from model_preprocessing import get_data, get_data_kfolds
 from prediction_processing import post_process, save_meta_data
 
 class Timer:
@@ -51,7 +51,12 @@ def parse_args(MODEL_NAME, model_vars):
     parser = argparse.ArgumentParser(description='Naive Bayes model')
     parser.add_argument('--generate_substrings', type=str, default='none', const='random', nargs='?', help='Generate random substrings')
     parser.add_argument('--random_substrings', type=int, default=10, help='Number of random substrings to generate')
+    parser.add_argument('--kfolds', action='store_true', help='Use KFold cross-validation')
     args = parser.parse_args()
+
+    # Cannot generate random substrings with KFold
+    if args.kfolds and args.generate_substrings == 'random':
+        raise ValueError('Random substrings cannot be generated with KFold cross-validation')
 
     # Append model name with 'random' and number of random substrings 
     # if generating random substrings
@@ -60,6 +65,7 @@ def parse_args(MODEL_NAME, model_vars):
 
     model_vars['generate_substrings'] = args.generate_substrings
     model_vars['random_substrings'] = args.random_substrings
+    model_vars['kfolds'] = args.kfolds
 
     return MODEL_NAME
 
@@ -96,6 +102,36 @@ def fetch_data(model_vars:dict)-> None:
     model_vars['X_test'] = X_test
     model_vars['y_train'] = y_train
     model_vars['y_test'] = y_test
+    model_vars['le'] = le
+
+def fetch_data_kfolds(model_vars:dict)-> None:
+    """
+    Fetches the data for training and testing the model and stores it in the model_vars dictionary.
+
+    This function retrieves the training and testing data, along with their corresponding labels,
+    and a label encoder. The data is fetched based on the command-line arguments provided.
+
+    Args:
+        model_vars (dict): A dictionary to store the fetched data. The dictionary will be updated
+                           with the following keys:
+                           - 'skf' (StratifiedKFold): The StratifiedKFold object.
+                            - 'X' (pd.Series): The data.
+                            - 'y' (pd.Series): The labels.
+                            - 'le' (LabelEncoder): The label encoder.
+        args (Namespace): An object containing the command-line arguments. It should have the following attributes:
+                          - generate_substrings (bool): Whether to generate substrings.
+                          - random_substrings (bool): Whether to generate random substrings.
+
+    Returns:
+        None
+    """
+
+    skf, X, y, le = get_data_kfolds()
+
+    # Save variables to model_vars
+    model_vars['skf'] = skf
+    model_vars['X'] = X
+    model_vars['y'] = y
     model_vars['le'] = le
 
 def run_model_pipeline(
@@ -156,3 +192,75 @@ def run_model_pipeline(
     post_process(model_vars, model_name=MODEL_NAME)
     timer.end()
     save_meta_data(timer.timings, model_vars, model_name=MODEL_NAME)
+
+def run_model_pipeline_kfolds(
+        MODEL_NAME:str,
+        fetch_data:callable,
+        declare_model:callable,
+        train_model:callable,
+        predict:callable,
+        model_vars:dict,
+    ):
+    """
+    Runs the model pipeline for training and evaluating a machine learning model.
+    Using a KFold cross-validation strategy.
+
+    Args:
+        MODEL_NAME (str): The name of the model.
+        fetch_data (callable): A function that fetches the data for training and evaluation.
+        declare_model (callable): A function that declares the model architecture.
+        train_model (callable): A function that trains the model.
+        predict (callable): A function that performs predictions using the trained model.
+        model_vars (dict): A dictionary containing variables and parameters for the model.
+        args (Namespace): A namespace object containing command-line arguments.
+
+    Returns:
+        None
+    """
+
+    # random substrings can be generated with kfold
+    if model_vars['generate_substrings'] == 'random':
+        raise ValueError('Random substrings cannot be generated with KFold cross-validation')
+
+    print(f'Model name: {MODEL_NAME}')
+    timer = Timer()
+    timer.start()
+
+    # Get the data
+    timer.start('get_data')
+    fetch_data(model_vars)
+    timer.end('get_data')
+
+    print(f'Data preparation time: {timer["get_data"]:0.4f}')
+
+    for fold, (train_index, test_index) in enumerate(model_vars['skf'].split(model_vars['X'], model_vars['y'])):
+        print(f'Fold: {fold + 1}')
+
+        model_vars['X_train'] = model_vars['X'].iloc[train_index]
+        model_vars['X_test'] = model_vars['X'].iloc[test_index]
+        model_vars['y_train'] = model_vars['y'].iloc[train_index]
+        model_vars['y_test'] = model_vars['y'].iloc[test_index] 
+        model_vars['model_name'] = f'{MODEL_NAME}_fold_{fold}'
+
+        # Declare the model
+        timer.start('model_declaration')
+        declare_model(model_vars)
+        timer.end('model_declaration')
+
+        # Fit the model
+        timer.start('fit')
+        train_model(model_vars)
+        timer.end('fit')
+
+        print(f'Training time: {timer["fit"]:0.4f}')
+
+        # Evaluate the model
+        timer.start('predict')
+        predict(model_vars)
+        timer.end('predict')
+        print(f'Prediction time: {timer["predict"]:0.4f}')
+
+        # Process results and save figures/data
+        post_process(model_vars, model_name=model_vars['model_name'], save_dir=f'results/{MODEL_NAME}_kfolds', plot=False)
+        timer.end()
+        save_meta_data(timer.timings, model_vars, model_name=model_vars['model_name'], save_dir=f'results/{MODEL_NAME}_kfolds')

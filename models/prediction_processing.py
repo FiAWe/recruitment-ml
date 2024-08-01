@@ -2,9 +2,13 @@ from sklearn.metrics import classification_report, roc_auc_score, roc_curve, pre
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from os import makedirs
 
-def post_process(model_vars, model_name, verbose=True):
+def post_process(model_vars, model_name, plot=True, save_dir='results', verbose=True):
     
+    # Create the results directory if it does not exist
+    makedirs(save_dir, exist_ok=True)
+
     # Extract the variables
     X_test = model_vars['X_test']
     y_test = model_vars['y_test']
@@ -25,7 +29,10 @@ def post_process(model_vars, model_name, verbose=True):
 
     # Join into a single dataframe
     df = pd.DataFrame({'text': X_test, 'label': y_test, 'prediction': y_pred_nb, 'prediction_proba': y_pred_nb_proba})
-    df.to_csv(f'results/{model_name}.csv', index=False)
+    df.to_csv(f'{save_dir}/{model_name}.csv', index=False)
+
+    if not plot:
+        return
 
     fpr, tpr, thresholds = roc_curve(y_test, y_pred_nb_proba)
     plt.plot(fpr, tpr,  marker='.')
@@ -40,7 +47,7 @@ def post_process(model_vars, model_name, verbose=True):
     plt.gca().spines['right'].set_visible(False)
     plt.gca().spines['top'].set_visible(False)
 
-    plt.savefig(f'results/{model_name}_roc_curve.png', dpi=300)
+    plt.savefig(f'{save_dir}/{model_name}_roc_curve.png', dpi=300)
     plt.clf()
 
     precision, recall, thresholds = precision_recall_curve(y_test, y_pred_nb_proba)
@@ -57,17 +64,17 @@ def post_process(model_vars, model_name, verbose=True):
     plt.gca().spines['right'].set_visible(False)
     plt.gca().spines['top'].set_visible(False)
 
-    plt.savefig(f'results/{model_name}_precision_recall_curve.png', dpi=300)
+    plt.savefig(f'{save_dir}/{model_name}_precision_recall_curve.png', dpi=300)
     plt.clf()
 
-def save_meta_data(timings:dict, model_vars:dict, model_name:str):
+def save_meta_data(timings:dict, model_vars:dict, model_name:str, save_dir='results'):
 
     data_size = {
         'train': len(model_vars['X_train']),
         'test': len(model_vars['X_test'])
     }
 
-    with open(f'results/{model_name}_metadata.txt', 'w') as f:
+    with open(f'{save_dir}/{model_name}_metadata.txt', 'w') as f:
         f.write('Timings\n')
         f.write('-------\n')
         for key, value in timings.items():

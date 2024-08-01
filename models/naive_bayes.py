@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import Dict, Any
 from pandas import Series
 
-from model_pipeline import run_model_pipeline, fetch_data, parse_args
+from model_pipeline import run_model_pipeline, fetch_data, parse_args, run_model_pipeline_kfolds, fetch_data_kfolds
 
 MODEL_NAME = 'naive_bayes'
 
@@ -72,5 +72,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     MODEL_NAME = parse_args(MODEL_NAME, model_vars)
 
-    run_model_pipeline(MODEL_NAME, fetch_data, declare_model, train_model, predict, model_vars)
-
+    if model_vars['kfolds']:
+        run_model_pipeline_kfolds(MODEL_NAME, fetch_data_kfolds, declare_model, train_model, predict, model_vars)
+    else:
+        run_model_pipeline(MODEL_NAME, fetch_data, declare_model, train_model, predict, model_vars)

@@ -2,7 +2,7 @@
 
 random_string_counts=(5 10 50)
 
-Naive Bayes
+# Naive Bayes
 python3 naive_bayes.py
 for count in "${random_string_counts[@]}"; do
     python3 naive_bayes.py --generate_substrings --random_substrings "$count"
@@ -25,6 +25,9 @@ python3 svm.py
 for count in "${random_string_counts[@]}"; do
     python3 svm.py --generate_substrings --random_substrings "$count"
 done
+
+# Reducing the number of random substrings for LSTM and BERT
+random_string_counts=(5 10)
 
 # lstm
 python3 lstm.py
