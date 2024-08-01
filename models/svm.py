@@ -1,6 +1,3 @@
-import time
-import argparse
-
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer

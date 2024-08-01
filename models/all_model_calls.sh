@@ -36,7 +36,11 @@ for count in "${random_string_counts[@]}"; do
 done
 
 # bert
+random_string_counts=(5)
 python3 bert.py
 for count in "${random_string_counts[@]}"; do
     python3 bert.py --generate_substrings --random_substrings "$count"
 done
+
+# Naive Bayes - kfold
+python3 naive_bayes.py --kfolds
